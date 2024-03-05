@@ -20,7 +20,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: classroomRunner
+    runs-on: ip-172-31-137-84
     timeout-minutes: 5
     steps:
       - name: Pull image from docker hub
