@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                Int                            @id @default(autoincrement())
+  firstName         String
+  lastName          String
+  email             String                         @unique
+  password          String
+  token             String?                        @unique
+  otp               String?
+  verified          Boolean                        @default(false)
+  role              UserRole                       @default(STUDENT)
+  submissions       StudentAssignmentSubmissions[]
+  teacherClassrooms Classrooms[]                   @relation("Teachers")
+  studentClassrooms Classrooms[]                   @relation("Student")
+  assignments       Assignments[]
+}
+
+model Classrooms {
+  id          Int           @id @default(autoincrement())
+  name        String
+  teacher     Users         @relation("Teachers", fields: [teacherId], references: [id])
+  teacherId   Int
+  students    Users[]       @relation("Student")
+  assignments Assignments[]
+  isDeleted   Boolean?      @default(false)
+}
+
+model Assignments {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  dueDate     DateTime
+  totalScore  Float
+  isDeleted   Boolean? @default(false)
+
+  teacherId   Int
+  teacher     Users                          @relation(fields: [teacherId], references: [id])
+  Submission  StudentAssignmentSubmissions[]
+  classroom   Classrooms?                    @relation(fields: [classroomId], references: [id])
+  classroomId Int?
+}
+
+model StudentAssignmentSubmissions {
+  id            Int         @id @default(autoincrement())
+  student       Users       @relation(fields: [studentId], references: [id])
+  studentId     Int
+  assignment    Assignments @relation(fields: [assignmentId], references: [id])
+  assignmentId  Int
+  submissionUrl String
+  submittedAt   DateTime    @default(now())
+  score         Float?
+  isDeleted     Boolean?    @default(false)
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
