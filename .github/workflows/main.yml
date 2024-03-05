@@ -1,1 +1,30 @@
-#
+name: Deployment
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Login docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_KEY }}
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} -f API/Dockerfile .
+      - name: Publish Image to docker hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:latest
+
+  deploy:
+    needs: build
+    runs-on: classroomRunner
+    steps:
+      - name: Pull image from docker hub
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:latest
+      - name: Delete Old container
+        run: docker rm -f ${{ secrets.DOCKER_CONTAINER }}
+      - name: Run docker container
+        run: docker run -d -p ${{ secrets.SERVER_PORT }}:${{ secrets.LOCAL_PORT }} --name ${{ secrets.DOCKER_CONTAINER }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
