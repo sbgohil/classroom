@@ -1,8 +1,8 @@
-FROM node:14.17.5
+FROM node:20.11.1
 
 WORKDIR /src
-COPY package.json ./
-RUN npm i
+COPY package*.json ./
+RUN npm ci
 COPY . .
 CMD ["node","app.js"]
 EXPOSE 80
